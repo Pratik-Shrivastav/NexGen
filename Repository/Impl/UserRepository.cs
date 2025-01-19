@@ -31,7 +31,7 @@ namespace NextGen.Repository.Impl
 
         public User GetUserByPhoneNumber(string phoneNumber)
         {
-            return _context.UserTable.FirstOrDefault(u => u.Phone == phoneNumber);
+            return _context.UserTable.Include(x=>x.MembershipTransactions).Include(y=>y.PlayTransactions).FirstOrDefault(u => u.Phone == phoneNumber);
         }
 
         public void SaveChanges()
@@ -51,7 +51,7 @@ namespace NextGen.Repository.Impl
 
         public ICollection<PlayTransaction> GetAllPlayTransactions()
         {
-            return _context.PlayTransactionTable.ToList();
+            return _context.PlayTransactionTable.Include(x=>x.User).ToList();
         }
 
         public ICollection<MembershipTransaction> GetAllMembershipTransactions()

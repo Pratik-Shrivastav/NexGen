@@ -13,24 +13,39 @@ namespace NextGen.Service.Impl
 
         private readonly IUserRepository _userRepository;
         private const double RATE = 120;
+        private const double INSTA_DISCOUNT = 0.9;
+        private const double REFERRAL_DISCOUNT = 0.8;
+
+
 
         public TransactionService(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
 
-        public PlayTransaction EndPlayTransaction(int id)
+        public ICollection<PlayTransaction> GetAllTransaction(){
+            return _userRepository.GetAllPlayTransactions();
+        }
+        public PlayTransaction EndPlayTransaction(int id,string subject)
         {
             var playTransaction = _userRepository.GetTransactionById(id);
             playTransaction.EndTime = DateTime.Now;
             playTransaction.ActualTime = (playTransaction.EndTime - playTransaction.StartTime).TotalMinutes;
-
+            playTransaction.UpdatedOn = DateTime.Now;
+            playTransaction.UpdatedBy = subject;
             double totalAmount = 0.0;
             CalculatePlay(playTransaction.User.Phone, playTransaction.ActualTime, ref totalAmount);
             playTransaction.Amount = totalAmount;
-            if (playTransaction.Amount == 0)
+            if (playTransaction.Amount == 0.0)
             {
                 playTransaction.Paid = true;
+            }
+            if(playTransaction.DiscountType == NexGen.Enum.DiscountType.InstaStory){
+                playTransaction.Amount -= playTransaction.Amount * INSTA_DISCOUNT;
+            }
+            else if(playTransaction.DiscountType == NexGen.Enum.DiscountType.Referal){
+                playTransaction.Amount -= playTransaction.Amount * REFERRAL_DISCOUNT;
+
             }
             _userRepository.UpdatePlayTransaction(playTransaction);
             _userRepository.SaveChanges();
@@ -58,9 +73,9 @@ namespace NextGen.Service.Impl
 
         public static double CalculateForNomal(User user, double time)
         {
-            var hours = time / 60;
-            var minutes = time % 60;
-            if (minutes > 15)
+            var hours = Math.Floor(time / 60);
+            var minutes = Math.Floor(time % 60);
+            if (minutes > 15 && minutes < 30)
             {
                 hours += 0.5;
             }
@@ -91,10 +106,12 @@ namespace NextGen.Service.Impl
             return calculatedAmount;
         }
 
-        public void Payment(int transactionId, PaymentMethod paymentMethod){
+        public void Payment(int transactionId, PaymentMethod paymentMethod, string subject){
             var transaction = _userRepository.GetTransactionById(transactionId);
             transaction.PaymentMethod = paymentMethod;
             transaction.Paid = true;
+            transaction.UpdatedOn = DateTime.Now;
+            transaction.UpdatedBy = subject;
             _userRepository.UpdatePlayTransaction(transaction);
         }
 

@@ -43,7 +43,7 @@ namespace NextGen.Service.Impl
             user.OTP = GenerateOtp.GenerateOtpToLogin();
             user.OTPGeneratedAt = DateTime.Now;
             EmailHandler.SendEmail(user.Email, "OTP for Login", $"Your OTP is {user.OTP}");
-            _userRepository.AddUser(user);
+            _userRepository.UpdateUser(user);
         }
 
         public void ValidateOtp(string phonenumber, double otp, string subject)
@@ -135,6 +135,8 @@ namespace NextGen.Service.Impl
             playTransaction.StartTime = DateTime.Now;
             playTransaction.CreatedOn = DateTime.Now;
             playTransaction.CreatedBy = subject;
+
+            user.PlayTransactions.Add(playTransaction);
             
             _userRepository.UpdateUser(user);
         }

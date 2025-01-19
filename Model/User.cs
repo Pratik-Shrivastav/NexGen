@@ -22,8 +22,8 @@ namespace NexGen.Model
         public string CreatedBy { get; set; }
         public DateTime UpdatedOn { get; set; }
         public string UpdatedBy { get; set; }
-        public ICollection<PlayTransaction> PlayTransactions { get; set; }
-        public ICollection<MembershipTransaction> MembershipTransactions { get; set; }
+        public ICollection<PlayTransaction> PlayTransactions { get; set; } = new List<PlayTransaction>();
+        public ICollection<MembershipTransaction> MembershipTransactions { get; set; } = new List<MembershipTransaction>();
 
 
 

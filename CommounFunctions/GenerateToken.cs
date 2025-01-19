@@ -14,7 +14,7 @@ namespace NexGen.CommonFunction
             {
                 new Claim(JwtRegisteredClaimNames.Sub, configuration["Jwt:Subject"]),
                 new Claim("Id",admin.Id.ToString()),
-                new Claim("Display Name",admin.Name),
+                new Claim("User_Name",admin.Name),
                 new Claim("Email", admin.Email),
                 new Claim("Phone", admin.Phone)
             };

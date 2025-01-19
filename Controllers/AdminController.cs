@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NextGen.Request;
 using NextGen.Service;
@@ -22,6 +23,7 @@ namespace NexGen.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPut("update")]
         public IActionResult UpdateAdmin([FromBody] AdminRequest admin)
         {
