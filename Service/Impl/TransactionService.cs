@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NexGen.Enum;
 using NexGen.Model;
 using NextGen.Enum;
 using NextGen.Repository;
@@ -13,6 +14,7 @@ namespace NextGen.Service.Impl
 
         private readonly IUserRepository _userRepository;
         private const double RATE = 120;
+        private const double GROUP_RATE = 100;
         private const double INSTA_DISCOUNT = 0.9;
         private const double REFERRAL_DISCOUNT = 0.8;
 
@@ -34,7 +36,8 @@ namespace NextGen.Service.Impl
             playTransaction.UpdatedOn = DateTime.Now;
             playTransaction.UpdatedBy = subject;
             double totalAmount = 0.0;
-            CalculatePlay(playTransaction.User.Phone, playTransaction.ActualTime, ref totalAmount);
+            
+            CalculatePlay(playTransaction.User.Phone, playTransaction.ActualTime, ref totalAmount,playTransaction.DiscountType);
             playTransaction.Amount = totalAmount;
             if (playTransaction.Amount == 0.0)
             {
@@ -52,26 +55,30 @@ namespace NextGen.Service.Impl
             return playTransaction;
         }
 
-        public void CalculatePlay(string phonenumber, double time, ref double totalAmount)
+        public void CalculatePlay(string phonenumber, double time, ref double totalAmount, DiscountType discountType)
         {
             var user = _userRepository.GetUserByPhoneNumber(phonenumber);
             if (user == null)
             {
                 throw new Exception("User not found");
             }
-
-            switch (user.Membership)
-            {
-                case NexGen.Enum.UserType.Normal:
-                    totalAmount = CalculateForNomal(user, time);
-                    break;
-                case NexGen.Enum.UserType.Membership:
-                    totalAmount = CalculateForMember(user, time);
-                    break;
+            if(discountType == DiscountType.Group){
+                totalAmount = CalculateForNomal(user, time,GROUP_RATE);
+            }
+            else{
+                switch (user.Membership)
+                {
+                    case NexGen.Enum.UserType.Normal:
+                        totalAmount = CalculateForNomal(user, time,RATE);
+                        break;
+                    case NexGen.Enum.UserType.Membership:
+                        totalAmount = CalculateForMember(user, time);
+                        break;
+                }
             }
         }
 
-        public static double CalculateForNomal(User user, double time)
+        public static double CalculateForNomal(User user, double time, double RatePerHour)
         {
             var hours = Math.Floor(time / 60);
             var minutes = Math.Floor(time % 60);
@@ -83,7 +90,10 @@ namespace NextGen.Service.Impl
             {
                 hours++;
             }
-            return hours * RATE;
+            if(hours>=2){
+                return hours*GROUP_RATE;
+            }
+            return hours * RatePerHour;
         }
 
         public static double CalculateForMember(User user, double time)
@@ -102,7 +112,7 @@ namespace NextGen.Service.Impl
             }
             user.Balance = 0;
             user.Membership = NexGen.Enum.UserType.Normal;
-            double calculatedAmount = CalculateForNomal(user, time - user.Balance);
+            double calculatedAmount = CalculateForNomal(user, time - user.Balance,RATE);
             return calculatedAmount;
         }
 
